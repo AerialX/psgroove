@@ -13,3 +13,7 @@ jigcode:
 	addi	6,3,-0xFE0
 	mtctr	6
 	bctr
+
+	.long	0x04000000
+
+	
