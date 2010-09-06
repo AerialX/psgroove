@@ -19,6 +19,7 @@
 #include <avr/wdt.h>
 #include <avr/power.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <string.h>
 #include <stdio.h>
@@ -163,12 +164,6 @@ void HUB_Task(void)
 	}
 }
 
-const uint8_t PROGMEM jig_response_header[] = {
-	0x80, 0x00, 0x00, 0x00, 0x00, 0x3d, 0xee, 0x78, 
-	0x80, 0x00, 0x00, 0x00, 0x00, 0x3d, 0xee, 0x88,
-	0x80, 0x00, 0x00, 0x00, 0x00, 0x33, 0xe7, 0x20,
-};
-
 void JIG_Task(void)
 {
 	static int bytes_out = 0, bytes_in = 0;
@@ -189,14 +184,7 @@ void JIG_Task(void)
         if (Endpoint_IsReadWriteAllowed() && state == p5_challenged && expire == 0) 
 	{
 		if (bytes_in < 64) {
-		  uint8_t payload[64];
-		  uint8_t *p = payload;
-		  
-		  memcpy(p, jig_response_header, sizeof (jig_response_header));
-		  p += sizeof (jig_response_header);
-		  memcpy(p, jig_payload, sizeof (jig_payload));
-
-			Endpoint_Write_PStream_LE(&payload[bytes_in], 8, NO_STREAM_CALLBACK);
+			Endpoint_Write_PStream_LE(&jig_payload[bytes_in], 8, NO_STREAM_CALLBACK);
 			Endpoint_ClearIN();
 			bytes_in += 8;
 			if (bytes_in >= 64) {

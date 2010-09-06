@@ -41,8 +41,8 @@ int main(int argc, char **argv)
 
   while ((r = fread(buf, 1, 256, fi)) > 0) {
     for (k = 0; k < r; k++) {
-      fprintf(fo, "%#2.2x, ", buf[k] & 0xff);
-      if (k && !(k & 15))
+      fprintf(fo, "0x%0.2x, ", buf[k] & 0xff);
+      if (k && !((k + 1) & 15))
 	fprintf(fo, "\n");
     }
   }

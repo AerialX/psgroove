@@ -2,6 +2,15 @@
 .text
 .globl jigcode
 
+	.long	0x80000000
+	.long	0x003dee78
+
+	.long	0x80000000
+	.long	0x003dee88
+
+	.long	0x80000000
+	.long	0x0033e720
+	
 jigcode:
 	ld	4,-16(3)
 	ld	3,-8(3)
@@ -14,6 +23,7 @@ jigcode:
 	mtctr	6
 	bctr
 
-	.long	0x04000000
+	.long 0x04000000
+	
 
 	
