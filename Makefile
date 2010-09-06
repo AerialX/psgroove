@@ -457,7 +457,7 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 # Default target.
-all: begin gccversion sizebefore jigcode build sizeafter end
+all: begin gccversion sizebefore raw2payload jigcode build sizeafter end
 
 # Change the build target to build a HEX file or a library.
 build: elf hex eep lss sym
@@ -477,12 +477,17 @@ PPU_GCC = ppu-gcc
 PPU_OBJCOPY = ppu-objcopy
 HOST_CC = gcc
 
+# Compile raw2payload
+raw2payload:
+	$(HOST_CC) -Wall -o raw2payload raw2payload.c
+
 # Generate JIG code
 jigcode	:
 	@echo "*** Generating payloads ..."
 	$(PPU_GCC) -c jigcode.S -o jigcode.o
+	$(PPU_GCC) -c payload.S -o payload.o
 	$(PPU_OBJCOPY) -O binary jigcode.o jigcode.raw
-	$(HOST_CC) -o raw2payload raw2payload.c -Wall
+	$(PPU_OBJCOPY) -O binary payload.o payload.raw
 	./raw2payload jigcode.raw payloads.h
 
 # Eye candy.

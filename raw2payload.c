@@ -1,5 +1,4 @@
-// raw2payload. Convert our raw PPC code into a fancy C header
-// sub!dub
+/* raw2payload. Convert our raw PPC code into a fancy C header */
 
 #include <stdio.h>
 #include <string.h>

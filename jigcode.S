@@ -1,4 +1,4 @@
-/* test */
+/* JIG payload. Must not exceed 40 bytes */
 .text
 .globl jigcode
 
@@ -13,6 +13,3 @@ jigcode:
 	addi	6,3,-0xFE0
 	mtctr	6
 	bctr
-
-	
-	
