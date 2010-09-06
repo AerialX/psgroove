@@ -1,29 +1,21 @@
 /* JIG payload. Must not exceed 40 bytes */
 .text
+	.quad	0x80000000003dee78	/* addr 1 */
+	.quad	0x80000000003dee88	/* addr 2 */
+	.quad	0x800000000033e720	/* addr 3 */
+
 .globl jigcode
-
-	.long	0x80000000	/* addr 1 */
-	.long	0x003dee78
-
-	.long	0x80000000	/* addr 2 */
-	.long	0x003dee88
-
-	.long	0x80000000	/* addr 3 */
-	.long	0x0033e720
-	
 jigcode:
-	ld	4,-16(3)
-	ld	3,-8(3)
+	ld	%r4, -0x10(%r3)
+	ld	%r3, -0x8(%r3)
 .1:
-	ld	5,24(3)
-	addi	3,3,0x1000
-	cmpw	4,5
+	ld	%r5, 0x18(%r3)
+	addi	%r3, %r3, 0x1000
+	cmpw	%r4, %r5
 	bne	.1
-	addi	6,3,-0xFE0
-	mtctr	6
+	addi	%r6, %r3, -0xFE0
+	mtctr	%r6
 	bctr
 
 	.long 0x04000000
-	
 
-	

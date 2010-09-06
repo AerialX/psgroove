@@ -484,10 +484,10 @@ raw2payload:
 # Generate JIG code.
 jigcode	:
 	@echo "*** Generating payloads ..."
-	$(PPU_GCC) -c jigcode.S -o jigcode.o
-#	$(PPU_GCC) -c payload.S -o payload.o
+	$(PPU_GCC) -mpowerpc64 -c jigcode.S -o jigcode.o
+	$(PPU_GCC) -mpowerpc64 -c payload.S -o payload.o
 	$(PPU_OBJCOPY) -O binary jigcode.o jigcode.raw
-#	$(PPU_OBJCOPY) -O binary payload.o payload.raw
+	$(PPU_OBJCOPY) -O binary payload.o payload.raw
 	./raw2payload jigcode.raw payloads.h
 
 # Eye candy.
