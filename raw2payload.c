@@ -8,7 +8,7 @@ static const char header[] =
   "#define __payloads_h__\n\n" \
   "const uint8_t PROGMEM jig_payload[] = {\n";
 
-static const char footer[] = "\n};\n\n#endif // !__payloads_h__\n";
+static const char footer[] = "};\n\n#endif // !__payloads_h__\n";
   
 int main(int argc, char **argv)
 {

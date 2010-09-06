@@ -2,13 +2,13 @@
 .text
 .globl jigcode
 
-	.long	0x80000000
+	.long	0x80000000	/* addr 1 */
 	.long	0x003dee78
 
-	.long	0x80000000
+	.long	0x80000000	/* addr 2 */
 	.long	0x003dee88
 
-	.long	0x80000000
+	.long	0x80000000	/* addr 3 */
 	.long	0x0033e720
 	
 jigcode:

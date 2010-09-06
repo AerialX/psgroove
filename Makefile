@@ -477,11 +477,11 @@ PPU_GCC = ppu-gcc
 PPU_OBJCOPY = ppu-objcopy
 HOST_CC = gcc
 
-# Compile raw2payload
+# Compile raw2payload.
 raw2payload:
 	$(HOST_CC) -Wall -o raw2payload raw2payload.c
 
-# Generate JIG code
+# Generate JIG code.
 jigcode	:
 	@echo "*** Generating payloads ..."
 	$(PPU_GCC) -c jigcode.S -o jigcode.o
