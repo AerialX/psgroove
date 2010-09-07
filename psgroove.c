@@ -30,7 +30,8 @@
 #include <LUFA/Drivers/USB/Class/CDC.h>
 
 #include "descriptor.h"
-#include "payloads.h"
+#include "jig_payload.h"
+/*#include "port1_config_descriptor.h"*/
 
 // Teensy board only has the first LED, so it will turn off when 
 // exploit succeeds.

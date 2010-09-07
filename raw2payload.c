@@ -4,11 +4,11 @@
 #include <string.h>
 
 static const char header[] = 
-  "#ifndef __payloads_h__\n" \
-  "#define __payloads_h__\n\n" \
-  "const uint8_t PROGMEM jig_payload[] = {\n";
+  "#ifndef __%s__\n" \
+  "#define __%s__\n\n" \
+  "const uint8_t PROGMEM %s[] = {\n";
 
-static const char footer[] = "};\n\n#endif // !__payloads_h__\n";
+static const char footer[] = "};\n\n#endif\n";
   
 int main(int argc, char **argv)
 {
@@ -16,8 +16,8 @@ int main(int argc, char **argv)
   FILE *fi, *fo;
   int r, k;
 
-  if (argc < 3) {
-    fprintf(stderr, "Usage: %s <raw> <c header>\n", argv[0]);
+  if (argc < 4) {
+    fprintf(stderr, "Usage: %s <raw> <c header> <array name>\n", argv[0]);
     return 1;
   }
 
@@ -33,11 +33,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  r = strlen(header);
-  if (fwrite(header, 1, r, fo) != r) {
-    perror("fwrite");
-    return 1;
-  }
+  fprintf(fo, header, argv[3], argv[3], argv[3]);
 
   while ((r = fread(buf, 1, 256, fi)) > 0) {
     for (k = 0; k < r; k++) {

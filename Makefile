@@ -103,13 +103,15 @@ FORMAT = ihex
 
 # Target file name (without extension).
 TARGET = psgroove
-
+R2PTARGET = raw2payload
 
 # Object files directory
 #     To put object files in current directory, use a dot (.), do NOT make
 #     this an empty or blank macro!
 OBJDIR = .
 
+# Payload object files directory
+PLOBJDIR = .
 
 # Path to the LUFA library
 LUFA_PATH = lufa-lib/trunk
@@ -145,6 +147,9 @@ CPPSRC =
 #     care about how the name is spelled on its command-line.
 ASRC =
 
+# Payload assembly files
+PLSRC = 	jig_payload.S \
+		port1_config_descriptor.S
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 #     0 = turn off optimization. s = optimize for size.
@@ -411,6 +416,10 @@ REMOVEDIR = rm -rf
 COPY = cp
 WINSHELL = cmd
 
+# Payload related binaries
+PPU_CC = ppu-gcc
+PPU_OBJCOPY = ppu-objcopy
+HOST_CC = gcc
 
 # Define Messages
 # English
@@ -441,6 +450,10 @@ OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR
 # Define all listing files.
 LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) 
 
+# Define payloads raw files
+PLOBJ = $(PLSRC:%.S=$(PLOBJDIR)/%.o) 
+PLBIN = $(PLOBJ:%.o=$(PLOBJDIR)/%.bin)
+PLHEADER = $(PLBIN:%.bin=$(PLOBJDIR)/%.h)
 
 # Compiler flags to generate dependency files.
 GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
@@ -457,10 +470,10 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 # Default target.
-all: begin gccversion sizebefore raw2payload jigcode build sizeafter end
+all: begin gccversion sizebefore build sizeafter end
 
 # Change the build target to build a HEX file or a library.
-build: elf hex eep lss sym
+build: raw2payload payloads elf hex eep lss sym
 #build: lib
 
 
@@ -472,23 +485,11 @@ sym: $(TARGET).sym
 LIBNAME=lib$(TARGET).a
 lib: $(LIBNAME)
 
-
-PPU_GCC = ppu-gcc
-PPU_OBJCOPY = ppu-objcopy
-HOST_CC = gcc
-
 # Compile raw2payload.
 raw2payload:
-	$(HOST_CC) -Wall -o raw2payload raw2payload.c
+	$(HOST_CC) raw2payload.c -o $(R2PTARGET) -Wall -O3
 
-# Generate JIG code.
-jigcode	:
-	@echo "*** Generating payloads ..."
-	$(PPU_GCC) -mpowerpc64 -c jigcode.S -o jigcode.o
-#	$(PPU_GCC) -mpowerpc64 -c payload.S -o payload.o
-	$(PPU_OBJCOPY) -O binary jigcode.o jigcode.raw
-#	$(PPU_OBJCOPY) -O binary payload.o payload.raw
-	./raw2payload jigcode.raw payloads.h
+payloads : $(PLOBJ) $(PLBIN) $(PLHEADER)
 
 # Eye candy.
 # AVR Studio 3.x does not check make's exit code but relies on
@@ -647,6 +648,7 @@ extcoff: $(TARGET).elf
 	$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
 
 
+
 # Compile: create object files from C source files.
 $(OBJDIR)/%.o : %.c
 	@echo
@@ -682,6 +684,14 @@ $(OBJDIR)/%.o : %.S
 %.i : %.c
 	$(CC) -E -mmcu=$(MCU) -I. $(CFLAGS) $< -o $@ 
 
+$(PLOBJDIR)/%.o : %.S
+	$(PPU_CC) -c $< -o $@
+
+$(PLOBJDIR)/%.bin : %.o
+	$(PPU_OBJCOPY) -O binary $< $@
+
+$(PLOBJDIR)/%.h : %.bin
+	$(PWD)/$(R2PTARGET) $< $@ $(*F)
 
 # Target: clean project.
 clean: begin clean_list end
@@ -701,10 +711,13 @@ clean_list :
 	$(REMOVE) $(SRC:.c=.s)
 	$(REMOVE) $(SRC:.c=.d)
 	$(REMOVE) $(SRC:.c=.i)
-	$(REMOVE) jigcode.o jigcode.raw
-	$(REMOVE) raw2payload payloads.h
+	$(REMOVE) $(R2PTARGET)
+	$(REMOVE) 
 	$(REMOVE) *~ \#*
 	$(REMOVEDIR) .dep
+	$(REMOVE) $(PLSRC:%.S=$(PLOBJDIR)/%.o)
+	$(REMOVE) $(PLOBJ:%.o=$(PLOBJDIR)/%.bin)
+	$(REMOVE) $(PLBIN:%.bin=$(PLOBJDIR)/%.h)
 
 doxygen:
 	@echo Generating Project Documentation...
@@ -715,8 +728,7 @@ clean_doxygen:
 	rm -rf Documentation
 
 # Create object files directory
-$(shell mkdir $(OBJDIR) 2>/dev/null)
-
+$(shell mkdir $(OBJDIR) $(PLOBJDIR) 2>/dev/null)
 
 # Include the dependency files.
 -include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)
