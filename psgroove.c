@@ -376,21 +376,6 @@ int main(void)
 			state = p1_disconnected;
 			expire = 20;
 		}
-
-		// connect 6
-		if (state == p1_disconnected && expire == 0)
-		{
-			switch_port(0);
-			connect_port(6);
-			state = p6_wait_reset;
-		}
-
-		if (state == p6_wait_reset && last_port_reset_clear == 6)
-		{
-			switch_port(6);
-			state = p6_wait_enumerate;
-		}
-
 		// done
 		if (state == done)
 		{

@@ -7,6 +7,7 @@
 #define strncmp 0x4d344
 #define alloc 0x62088
 #define free 0x624c8
+#define add_kernel_module 0xd22d8
 
 /* Addressing Macros */
 // Payload bases
@@ -82,16 +83,6 @@ shell_code_entry:
 	LOADI_LABEL1(%r4, return1);
 	li	%r5, 0x4fa
 	bl	ABS1(memcpy)
-	mr	%r3, %r31
-	LOADI_LABEL2(%r3, return1)
-	addi	%r3, %r3, 0x20
-	bl	ABS1(0xd22d8)
-	mr	%r3, %r31
-	LOADI_LABEL2(%r3, return1)
-	mr	%r4, %r31
-	LOADI_ABS(%r4, 0x2eb128)
-	addi	%r3, %r3, 0x10
-	std	%r3, 0x120(%r4)
 	mr	%r5, %r31
 	LOADI_LABEL1(%r5, patch_table)
 shell_code_entry_loop:
@@ -140,101 +131,13 @@ vsh_open_hook_desc:
 	b	vsh_open_hook
 
 .org 0x1bc
-	// looks like a class
-	QUAD_ABS2(game_launch_syscall36)
-	.quad 0x800000000033E720
-	QUAD_ABS2(strMod)
-	QUAD_ABS2(port6_match_desc)
-	QUAD_ABS2(port6_plugged_desc)
-	QUAD_ABS2(port6_unplugged_desc)
-
-port6_match_desc:
-	QUAD_ABS2(port6_match)
-	.quad 0x800000000033E720
-port6_plugged_desc:
-	QUAD_ABS2(port6_plugged)
-	.quad 0x800000000033E720
-port6_unplugged_desc:
-	QUAD_ABS2(port6_unplugged)
-	.quad 0x800000000033E720
-store_flag_desc:
-	QUAD_ABS2(store_flag)
-	.quad 0x800000000033E720
 game_name:
-	.quad 0
-game_mountpoint:
 	.quad 0
 flags:
 	.long 0
 	.long 0
 
-.org 0x244  // Relocated to 0x50BD4, ABS offset is 0x50990
-port6_match:
-	stdu	%r1, -0x80(%r1)
-	mflr	%r0
-	std	%r0, 0x90(%r1)
-	li	%r4, 0
-	li	%r5, 1
-	bl	ABS2(0xd2998)
-	lwz	%r5, 8(%r3)
-	li	%r3, 0
-	lis	%r4, 0xaaaa
-	ori	%r4, %r4, 0xc0de
-	cmplw	%r4, %r5
-	beq	loc_278
-	li	%r3, -1
-loc_278:
-	extsw	%r3, %r3
-	ld	%r0, 0x90(%r1)
-	mtlr	%r0
-	addi	%r1, %r1, 0x80
-	blr
-
-.org 0x28c
-// Relocated to 0x50C1C
-port6_plugged:
-	stdu	%r1, -0x80(%r1)
-	mflr	%r0
-	std	%r0, 0x90(%r1)
-	li	%r4, 0
-	bl	ABS2(0xd29c4)
-	addi	%r4, %r1, 0x70
-	li	%r5, 0
-	std	%r5, 0(%r4)
-	li	%r6, 0x21aa
-	sth	%r6, 0(%r4)
-	li	%r6, 0
-	sth	%r6, 6(%r4)
-	MEM_BASE(%r6)
-	LOADI_LABEL2(%r6, store_flag_desc)
-	li	%r7, 0
-	bl	ABS2(0xd292c)
-	li	%r3, 0
-	ld	%r0, 0x90(%r1)
-	mtlr	%r0
-	addi	%r1, %r1, 0x80
-	blr
-
-.org 0x2e8
-// Relocated to 0x50C78
-port6_unplugged:
-	blr	// was li %r3, 0
-	li	%r11, 0xff
-	sc	1
-
-store_flag: // 0x50c84
-	cmpwi	%r3, 0
-	bne	store_flag_return
-	MEM_BASE(%r3)
-	LOADI_LABEL2(%r3, game_name)
-	li	%r4, 1
-	stw	%r4, 0x10(%r3)  // store 1 in "flags"
-store_flag_return:
-	blr
-
-game_launch_syscall36:
-	blr // This isn't needed and is wasting space
-
+.org 0x244
 vsh_open_hook:
 	stdu	%r1, -0xa0(%r1)
 	mflr	%r0
@@ -434,11 +337,6 @@ memory_patch_table_4:
 	PATCH_DATA(0x000d68c0, 0x6d6c2372)
 	PATCH_DATA(0x000d68c4, 0x6f6f7400)
 	.long 0
-
-strDevBDVD:
-	.string "psgroove!"
-strMod:
-	.string "mod"
 
 .org 0x6b0
 zero_payload:

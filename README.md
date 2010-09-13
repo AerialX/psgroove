@@ -21,6 +21,26 @@ It should work on:
 have been disabled.  This software is intended to allow the execution
 of unsigned third-party apps and games on the PS3.**
 
+
+Payloads
+--------
+This fork comes with multiple payloads, which you can enable by editing
+port1_config_descriptor.S. All payloads have been rearranged so that
+they do not use hardcoded addresses anymore; you can rewrite and resize
+functions without worrying about offsetting others.
+
+### Default Payload
+The default payload performs the basic PSGroove exploit; it allows you
+to install and run unsigned packages.
+
+### Apploader Payload
+This payload makes use of the /app\_home/PS3\_GAME menu item. You may place
+an application on a USB drive under the PS3\_GAME folder to run it without
+installing a package.
+**Note that simply extracting a .pkg onto the USB drive is not quite enough
+for a program to run. EBOOT.BIN must be slightly modified to boot properly.**
+
+
 Cloning
 -------
 The repository uses the LUFA library as a submodule.  To clone, use something like:
@@ -36,14 +56,6 @@ Configuring
 Chip and board selection can be handled in the Makefile.conf file.
 
 
-Board-specific notes
---------------------
-Teensy boards only have one LED, so it will turn off when the exploit
-succeeds rather than turn green.  Older Teensy 1.0 boards also have
-the polarity inverted.  In general, a LED should do something when the
-board is powered, and do something different when the exploit works.
-
-
 Building
 --------
 On Linux, use the AVR GCC toolchain (Debian/Ubuntu package: gcc-avr).
@@ -51,6 +63,12 @@ On Windows, WinAVR should do the trick.
 
     make clean
     make
+
+
+Board-specific notes
+--------------------
+Note that port 6 has been removed from this fork, and thus you will not
+see any LED confirmation on your device if the exploit succeeds.
 
 
 Programming
