@@ -1,4 +1,5 @@
 .dep/
+.depl/
 *.sym
 *.map
 *.lss

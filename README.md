@@ -63,8 +63,10 @@ and run
     make dfu
 
 For the Teensy boards, you probably have to use the [Teensy
-Loader](http://www.pjrc.com/teensy/loader.html) software.
-
+Loader](http://www.pjrc.com/teensy/loader.html) software. The makefile
+will use teensy-loader-cli if you run
+   
+    make install
 
 Using
 -----
