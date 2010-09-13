@@ -77,14 +77,17 @@ shell_code_entry:
 	std	%r31, 0x98(%r1)
 	std	%r0, 0xb0(%r1)
 	MEM_BASE(%r31)
-	mr	%r3, %r31
-	LOADI_LABEL2(%r3, return1)
-	mr	%r4, %r31
-	LOADI_LABEL1(%r4, return1);
+	LOAD_LABEL2(%r3, %r31, return1)
+	LOAD_LABEL1(%r4, %r31, return1);
 	li	%r5, 0x4fa
 	bl	ABS1(memcpy)
-	mr	%r5, %r31
-	LOADI_LABEL1(%r5, patch_table)
+	LOAD_LABEL2(%r3, %r31, syscall6_peek_desc)
+	LOAD_ABS(%r4, %r31, 0x2eb128)
+	std %r3, (0x08*6)(%r4)
+	LOAD_LABEL2(%r3, %r31, syscall7_poke_desc)
+	LOAD_ABS(%r4, %r31, 0x2eb128)
+	std %r3, (0x08*7)(%r4)
+	LOAD_LABEL1(%r5, %r31, patch_table)
 shell_code_entry_loop:
 	lwz	%r3, 0(%r5)
 	cmplwi	%r3, 0
@@ -127,12 +130,24 @@ return1:
 memory_patching_desc:
 	b	memory_patching
 
-.org 0x1bc
+syscall6_peek_desc:
+	QUAD_ABS2(syscall6_peek)
+syscall7_poke_desc:
+	QUAD_ABS2(syscall7_peek)
+
 flags:
 	.long 0
 	.long 0
 
-.org 0x244  // Relocated to 0x50BD4, ABS offset is 0x50990
+.org 0x244
+syscall6_peek:
+	ld %r3, 0x00(%r3)
+	blr
+
+syscall7_poke:
+	std %r4, 0x00(%r3)
+	blr
+
 memory_patching:
 	mflr	%r0
 	stdu	%r1, -0x1a0(%r1)
