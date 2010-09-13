@@ -1,0 +1,54 @@
+include Makefile.conf
+
+TARGET = lufa
+
+# Object files directory
+#     To put object files in current directory, use a dot (.), do NOT make
+#     this an empty or blank macro!
+OBJDIR = .
+
+# Path to the LUFA library
+LUFA_PATH = lufa-lib/trunk
+
+# Create the LUFA source path variables by including the LUFA root makefile
+include $(LUFA_PATH)/LUFA/makefile
+
+
+# List C source files here. (C dependencies are automatically generated.)
+SRC = $(LUFA_SRC_USB)
+
+EXTRAINCDIRS = $(LUFA_PATH)/
+# Define programs and commands.
+CC = avr-gcc
+AR = avr-ar
+REMOVE = rm -f
+REMOVEDIR = rm -rf
+
+OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) 
+
+GENDEPFLAGS = -MMD -MP -MF .depl/$(@F).d
+
+ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
+
+all: deps lib
+
+deps:
+	@mkdir -p .depl
+
+LIBNAME=lib$(TARGET).a
+lib: $(LIBNAME)
+
+%.a: $(OBJ)
+	$(AR) r $@ $(OBJ)
+
+%.o : %.c
+	$(CC) -c $(ALL_CFLAGS) $< -o $@
+
+clean:
+	$(REMOVE) $(LIBNAME)
+	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
+	$(REMOVEDIR) .depl
+
+-include $(wildcard .depl/*)
+
+.PHONY: all lib clean deps

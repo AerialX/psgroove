@@ -4,6 +4,8 @@ PSGroove
 This is the PSGroove, an open-source reimplementation of the psjailbreak exploit for
 AT90USB and related microcontrollers.
 
+***AerialX's fork of PSGroove was made for easier prototyping of the initial payload.***
+
 It should work on:
 
 - AT90USB162
@@ -31,38 +33,8 @@ The repository uses the LUFA library as a submodule.  To clone, use something li
 
 Configuring
 -----------
-Chip and board selection can usually be handled in the Makefile.
-In particular, update the MCU, BOARD, and F_CPU lines.  Suggested values:
+Chip and board selection can be handled in the Makefile.conf file.
 
-Teensy 1.0:
- 
-    MCU = at90usb162
-    BOARD = TEENSY
-    F_CLOCK = 16000000
-
-Teensy++ 1.0:
- 
-    MCU = at90usb646
-    BOARD = TEENSY
-    F_CLOCK = 16000000
-
-Teensy 2.0:
-
-    MCU = atmega32u4
-    BOARD = TEENSY
-    F_CLOCK = 16000000
-
-Teensy++ 2.0:
- 
-    MCU = at90usb1286
-    BOARD = TEENSY
-    F_CLOCK = 16000000
-
-AT90USBKEY / AT90USBKEY2:
-
-    MCU = at90usb1287
-    BOARD = USBKEY
-    F_CLOCK = 8000000
 
 Board-specific notes
 --------------------
@@ -92,6 +64,7 @@ and run
 
 For the Teensy boards, you probably have to use the [Teensy
 Loader](http://www.pjrc.com/teensy/loader.html) software.
+
 
 Using
 -----
