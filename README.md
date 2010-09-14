@@ -34,8 +34,8 @@ The default payload performs the basic PSGroove exploit; it allows you
 to install and run unsigned packages.
 
 ### Apploader Payload
-This payload makes use of the /app\_home/PS3\_GAME menu item. You may place
-an application on a USB drive under the PS3\_GAME folder to run it without
+This payload makes use of the /app_home/PS3_GAME menu item. You may place
+an application on a USB drive under the PS3_GAME folder to run it without
 installing a package.
 **Note that simply extracting a .pkg onto the USB drive is not quite enough
 for a program to run. EBOOT.BIN must be slightly modified to boot properly.**
@@ -45,7 +45,7 @@ Cloning
 -------
 The repository uses the LUFA library as a submodule.  To clone, use something like:
 
-    git clone git://github.com/aerialx/psgroove.git
+    git clone git://github.com/AerialX/psgroove.git
     cd psgroove
     git submodule init
     git submodule update
@@ -58,8 +58,17 @@ Chip and board selection can be handled in the Makefile.conf file.
 
 Building
 --------
-On Linux, use the AVR GCC toolchain (Debian/Ubuntu package: gcc-avr).
-On Windows, WinAVR should do the trick.
+Unlike the original PSGroove, this fork requires three different gcc compilers
+installed in order to build:
+
+* gcc: A normal host gcc is required to build the raw2payload application.
+* ppu-gcc: A version of gcc that will compile 64bit PowerPC instructions is
+           required to build the payload. Linux packages can be found on
+           [BSC.es](http://www.bsc.es/plantillaH.php?cat_id=461).
+* avr-gcc: Like PSGroove, WinAVR or the AVR GCC toolchain are required to build
+           the exploit itself.
+
+With these dependencies installed, you can build the exploit by simply running:
 
     make clean
     make
@@ -117,14 +126,12 @@ your own.
 
 The lv2 kernel starts at 0x8000000000000000
 
-Peek
-----
- * Syscall 6.
- * r3 is a 64 bit address to read
- * A 64 bit value will be returned in r3
+### Peek
+* lv2 syscall 6
+* r3 is a 64 bit address to read
+* A 64 bit value will be returned in r3
 
-Poke
-----
- * Syscall 7.
- * r4 is a 64 bit value
- * r3 is the address to write that value to
+### Poke
+* lv2 syscall 7
+* r4 is a 64 bit value
+* r3 is the address to write that value to
