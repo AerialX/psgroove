@@ -62,11 +62,11 @@ Unlike the original PSGroove, this fork requires three different gcc compilers
 installed in order to build:
 
 * gcc: A normal host gcc is required to build the raw2payload application.
-* ppu-gcc: A version of gcc that will compile 64bit PowerPC instructions is
-           required to build the payload. Linux packages can be found on
-           [BSC.es](http://www.bsc.es/plantillaH.php?cat_id=461).
-* avr-gcc: Like PSGroove, WinAVR or the AVR GCC toolchain are required to build
-           the exploit itself.
+* ppu-gcc, ppu-binutils: A version of gcc that will compile 64bit PowerPC instructions is
+  required to build the payload. Linux packages can be found on
+  [BSC.es](http://www.bsc.es/plantillaH.php?cat_id=461).
+* avr-gcc, avr-libc: Like PSGroove, WinAVR or the AVR GCC toolchain are required to build
+  the exploit itself.
 
 With these dependencies installed, you can build the exploit by simply running:
 

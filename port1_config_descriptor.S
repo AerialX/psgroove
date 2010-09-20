@@ -12,3 +12,8 @@
 // (eboot.bin will not usually run without modification)
 #include "payload_apploader.S"
 
+// The debug payload hooks syscall403 (debug write) and stores it in memory.
+// Use syscall8 to retrieve a pointer to pop a debug string.
+// This payload is based off of apploader (and will run apps off USB)
+// #include "payload_debug.S"
+

@@ -1,13 +1,6 @@
 // Thank you ***** :)
 
-/* Common Symbols */
-#define memcpy 0x7c01c
-#define memset 0x4d144
-#define strcpy 0x4d2f0
-#define strncmp 0x4d344
-#define alloc 0x62088
-#define free 0x624c8
-#define add_kernel_module 0xd22d8
+#include "payload_symbols.S"
 
 /* Addressing Macros */
 // Payload bases
@@ -32,7 +25,7 @@
 #define LOAD_ABS(dest, source, address) LOAD_LABEL(0, dest, source, address)
 #define LOADI_ABS(dest, address) LOAD_ABS(dest, dest, address)
 // Absolute .quads
-#define QUAD_ABS(base, address) .quad 0x8000000000000000 + base + address
+#define QUAD_ABS(base, address) .long 0x80000000; .long base + address
 #define QUAD_ABS1(address) QUAD_ABS(BASE1, address)
 #define QUAD_ABS2(address) QUAD_ABS(BASE2, address)
 
@@ -78,14 +71,13 @@ shell_code_entry:
 	std	%r0, 0xb0(%r1)
 	MEM_BASE(%r31)
 	LOAD_LABEL2(%r3, %r31, return1)
-	LOAD_LABEL1(%r4, %r31, return1);
+	LOAD_LABEL1(%r4, %r31, return1)
 	li	%r5, 0x4fa
 	bl	ABS1(memcpy)
-	LOAD_LABEL2(%r3, %r31, syscall6_peek_desc)
 	LOAD_ABS(%r4, %r31, 0x2eb128)
+	LOAD_LABEL2(%r3, %r31, syscall6_peek_desc)
 	std %r3, (0x08*6)(%r4)
 	LOAD_LABEL2(%r3, %r31, syscall7_poke_desc)
-	LOAD_ABS(%r4, %r31, 0x2eb128)
 	std %r3, (0x08*7)(%r4)
 	LOAD_LABEL1(%r5, %r31, patch_table)
 shell_code_entry_loop:
@@ -133,7 +125,7 @@ memory_patching_desc:
 syscall6_peek_desc:
 	QUAD_ABS2(syscall6_peek)
 syscall7_poke_desc:
-	QUAD_ABS2(syscall7_peek)
+	QUAD_ABS2(syscall7_poke)
 
 flags:
 	.long 0

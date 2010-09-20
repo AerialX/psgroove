@@ -79,10 +79,10 @@ shell_code_entry:
 	std %r3, (0x08*6)(%r4)
 	LOAD_LABEL2(%r3, %r31, syscall7_poke_desc)
 	std %r3, (0x08*7)(%r4)
-	LOAD_LABEL2(%r3, %r31, syscall8_alloc_desc)
+	LOAD_LABEL2(%r3, %r31, syscall8_debug_desc)
 	std %r3, (0x08*8)(%r4)
-	LOAD_LABEL2(%r3, %r31, syscall9_exec_desc)
-	std %r3, (0x08*9)(%r4)
+	LOAD_LABEL2(%r3, %r31, syscall403_write_desc)
+	std %r3, (0x08*403)(%r4)
 	LOAD_LABEL1(%r5, %r31, patch_table)
 shell_code_entry_loop:
 	lwz	%r3, 0(%r5)
@@ -95,7 +95,7 @@ shell_code_entry_loop:
 	b	shell_code_entry_loop
 shell_code_entry_return:
 	b	zero_payload
-	stdu	%r1, -0xb0(%r1)
+/*	stdu	%r1, -0xb0(%r1)
 	mflr	%r0
 	std	%r30, 0xa0(%r1)
 	std	%r31, 0xa8(%r1)
@@ -103,7 +103,7 @@ shell_code_entry_return:
 	std	%r0, 0xc0(%r1)
 	li	%r30, 0x7d0
 	li	%r31, 0xc8
-	b	ABS1(0xab04)
+	b	ABS1(0xab04)*/
 
 patch_table:
 	PATCH_INST(0x0490e0, ld %r4, 0xf08(%r2))
@@ -111,6 +111,15 @@ patch_table:
 	PATCH_INST(0x0490e8, std %r3, 0(%r4))
 	PATCH_BRANCH(0x04f0a8, bl, 0x050b44) // memory_patching_desc
 	PATCH_BRANCH(0x2aafc8, b, 0x050b48) // vsh_open_hook_desc
+
+	// vsh_open_hook
+	PATCH_INST(0x2aafe8, mflr %r0)
+	PATCH_INST(0x2aafec, std %r0, 0xa8(%r1))
+	// vsh_open_hook_return
+	PATCH_INST(0x2ab004, ld %r0, 0xa8(%r1))
+	PATCH_INST(0x2ab008, mtlr %r0)
+	PATCH_INST(0x2ab00c, blr)
+
 	PATCH_INST(0x04ed18, li %r4, 0)
 	PATCH_INST(0x04ed1c, stw %r4, 0(%r3))
 	PATCH_INST(0x04ed20, blr)
@@ -133,18 +142,17 @@ syscall6_peek_desc:
 	QUAD_ABS2(syscall6_peek)
 syscall7_poke_desc:
 	QUAD_ABS2(syscall7_poke)
-syscall8_alloc_desc:
-	QUAD_ABS2(syscall8_alloc)
-syscall9_exec_desc:
-	QUAD_ABS2(syscall9_exec)
+
+syscall8_debug_desc:
+	QUAD_ABS2(syscall8_debug)
+syscall403_write_desc:
+	QUAD_ABS2(syscall403_write)
 
 game_name:
 	.quad 0
 flags:
 	.long 0
-	.long 0
 
-.org 0x244
 syscall6_peek:
 	ld %r3, 0x00(%r3)
 	blr
@@ -153,37 +161,142 @@ syscall7_poke:
 	std %r4, 0x00(%r3)
 	blr
 
-syscall8_alloc:
-	li	%r4, 0x27
-	b	ABS2(alloc)
 
-syscall9_exec:
-	mtctr	%r3
-	bctr
-
-vsh_open_hook:
-	stdu	%r1, -0xa0(%r1)
+# Debug system will use a linked list of strings.
+# syscall403 will add a string to the end.
+# syscall8 will pop one from the front.
+debug_strings:
+	.quad 0
+syscall8_debug: # (r3 buffer, r4 length)
 	mflr	%r0
-	std	%r28, 0x80(%r1)
-	std	%r29, 0x88(%r1)
-	std	%r31, 0x98(%r1)
-	std	%r26, 0x70(%r1)
-	std	%r27, 0x78(%r1)
-	std	%r0, 0xb0(%r1)
-	mr	%r28, %r4
-	mr	%r29, %r3
-	MEM_BASE(%r31)
+	std		%r0, 0x10(%r1)
+	stdu	%r1, -0xa0(%r1)
+	std		%r27, 0x78(%r1)
+//	std		%r28, 0x80(%r1)
+	std		%r29, 0x88(%r1)
+	mr		%r29, %r3
+//	mr		%r28, %r4
+
+	## if (!debug_strings) return 0;
+	MEM_BASE(%r27)
+	LOADI_LABEL2(%r27, debug_strings)
+	ld		%r3, 0x00(%r27)
+	cmpldi	%r3, 0
+	beq		syscall8_debug_return
+
+	# olddebugstrings = debugstrings
+	# debugstrings = *(u64*)olddebugstrings
+	ld	%r4, 0x00(%r3)
+	std	%r4, 0x00(%r27)
+	mr	%r27, %r3
+
+	# strncpy(buffer, olddebugstrings + 8, length)
+	mr		%r3, %r29
+	addi	%r4, %r27, 8
+//	mr		%r5, %r28
+//	bl		ABS2(strncpy)
+	bl		ABS2(strcpy)
+
+	# free(olddebugstrings)
+	mr	%r3, %r27
+	li	%r4, 0x27
+	bl	ABS2(free)	
+	
+//	mr	%r3, %r28
+	li	%r3, 1
+syscall8_debug_return:
+	ld		%r27, 0x78(%r1)
+//	ld		%r28, 0x80(%r1)
+	ld		%r29, 0x88(%r1)
+	addi	%r1, %r1, 0xa0
+	ld		%r0, 0x10(%r1)
+	mtlr	%r0
+	blr
+
+syscall403_write: # (r3 channel, r4 buffer, r5 length, r6 written_ptr)
+	mflr	%r0
+	std		%r0, 0x10(%r1)
+	stdu	%r1, -0xa0(%r1)
+	std		%r26, 0x70(%r1)
+	std		%r28, 0x80(%r1)
+	std		%r29, 0x88(%r1)
+	mr		%r29, %r4
+	mr		%r28, %r5
+	
+syscall403_write_continue:
+	# string = debug_strings
+	# while (*(u64*)string) string = *(u64*)string;
+	MEM_BASE(%r26)
+	LOAD_LABEL2(%r26, %r26, debug_strings)
+syscall403_write_loop:
+	ld		%r3, 0x00(%r26)
+	cmpldi	%r3, 0
+	beq		syscall403_write_loop_end
+	mr		%r26, %r3
+	b		syscall403_write_loop
+
+syscall403_write_loop_end:
+	# *string = alloc(length)
+    # **string = 0
+	addi	%r3, %r28, 9
+
+	li	%r4, 0x27
+	bl	ABS2(alloc)
+	std	%r3, 0x00(%r26)
+	li	%r4, 0
+	std	%r4, 0x00(%r3)
+
+	# String end: r3[length + 8] = '\0'
+	add		%r5, %r3, %r28
+	stb		%r4, 0x08(%r5)
+
+    # strcpy(*string + 8, buffer)
+	addi	%r3, %r3, 8
+	mr		%r4, %r29
+	mr		%r5, %r28
+	bl		ABS2(memcpy)
+	
+	li		%r3, 0 # CELL_OK
+
+	# *written_ptr = length
+/*	cmpldi	%r27, 0
+	beq		syscall403_write_return
+	std		%r28, 0(%r27)*/
+
+syscall403_write_return:
+	ld		%r26, 0x70(%r1)
+	ld		%r28, 0x80(%r1)
+	ld		%r29, 0x88(%r1)
+	addi	%r1, %r1, 0xa0
+	ld		%r0, 0x10(%r1)
+	mtlr	%r0
+	blr
+	
+vsh_open_hook:
+	mflr	%r0
+	std		%r0, 0x10(%r1)
+	stdu	%r1, -0xb0(%r1)
+	std		%r25, 0xa0(%r1)
+	std		%r26, 0x70(%r1)
+	std		%r27, 0x78(%r1)
+	std		%r28, 0x80(%r1)
+	std		%r29, 0x88(%r1)
+	std		%r31, 0x98(%r1)
+	mr		%r28, %r4
+	mr		%r29, %r3
 	# r31 = 0x8000000000000000
 	# r29 = path
 	# r28 = r4 (open mode?)
 	# r27 = gametitle
 	# r26 = &gametitle
 
+	MEM_BASE(%r31)
 	LOAD_LABEL2(%r4, %r31, strAppHome)
+	mr		%r3, %r29
 	li		%r5, 9
 	bl		ABS2(strncmp)
 	cmpldi	%r3, 0
-	bne	vsh_open_return
+	bne		vsh_open_return
 	
 	LOAD_LABEL2(%r26, %r31, game_name)
 	ld		%r27, 0x00(%r26)
@@ -206,8 +319,21 @@ vsh_open_noalloc:
 
 vsh_open_return:
 	mr	%r3, %r29
-	mr	%r4, %r28
-	b	ABS2(0x2aaff0)
+	bl	ABS2(0x2aafe8)
+	extsw	%r25, %r31
+
+vsh_open_return_continue:
+	mr		%r3, %r25
+	ld		%r25, 0xa0(%r1)
+	ld		%r26, 0x70(%r1)
+	ld		%r27, 0x78(%r1)
+	ld		%r28, 0x80(%r1)
+	ld		%r29, 0x88(%r1)
+	ld		%r31, 0x98(%r1)
+	addi	%r1, %r1, 0xb0
+	ld		%r0, 0x10(%r1)
+	mtlr	%r0
+	blr
 
 strAppHome:
 	.string "/app_home"	
@@ -264,7 +390,7 @@ loc_4d4:
 	mr	%r4, %r30
 	bl	ABS2(0x4e81c)
 	mr	%r29, %r31
-	LOADI_LABEL2(%r29, flags + 4)
+	LOADI_LABEL2(%r29, flags)
 	lwz	%r3, 0(%r29)
 	lwz	%r5, 4(%r28)
 	add	%r3, %r3, %r5
