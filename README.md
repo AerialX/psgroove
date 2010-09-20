@@ -40,6 +40,13 @@ installing a package.
 **Note that simply extracting a .pkg onto the USB drive is not quite enough
 for a program to run. EBOOT.BIN must be slightly modified to boot properly.**
 
+### Debug Payload
+This payload provides two syscalls, 403 and 8. Syscall 403 is a standard
+debug write syscall that many apps will write to, including vsh itself. This
+payload will log all calls to syscall 403 and hang onto them until syscall 8
+is called to pop the oldest debug string from the list. A simple app can use
+this syscall to retrieve the debug output accumulated by the payload.
+
 
 Cloning
 -------
